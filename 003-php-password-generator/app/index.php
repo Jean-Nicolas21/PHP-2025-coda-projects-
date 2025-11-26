@@ -18,24 +18,37 @@ function takeRandom(string $subject): string {
     return $randomChar;
 }
 
-function generatePassword(int $size, bool $Capitals, bool $Smalls, bool $Numbers, bool $Symbols): string {
+function generatePassword(int $size, bool $capitals, bool $smalls, bool $numbers, bool $symbols): string {
     $password = "";
     $sequences = [];
-    $limitBoucle = $size - ($sequences)
-    if ($Capitals === 1) {
-        $sequences .= ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    if ($capitals == 1) {
+        $sequences[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     }
-    if ($Smalls === 1) {
-        $sequences .= ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+    if ($smalls == 1) {
+        $sequences[] = "abcdefghijklmnopqrstuvwxyz";
     }
-    if ($Numbers === 1) {
-        $sequences .= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    if ($numbers == 1) {
+        $sequences[] = "0123456789";
     }
-    if ($Symbols === 1) {
-        $sequences .= ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{', '}', '\\', '|', ';', ':', '\'', '"', ',', '.', '<', '>', '/', '?', '`', '~'];
+    if ($symbols == 1) {
+        $sequences[] = "!@#$%^&*()-_=+[ ]{}|\\\\;:'\"\\\",.<>/?`~";
     }
-
-    return "";
+    if (empty($sequences)) {
+        return "Please select at least one type.";
+    }
+    foreach ($sequences as $value) {
+        $password .= takeRandom($value);
+    }
+    $limitBoucle = $size - count($sequences);
+    if ($limitBoucle < 0) {
+        $limitBoucle = 0;
+    }
+    for ($i = 1; $i < $limitBoucle; $i++) {
+        $randomSequence = $sequences[random_int(0, (count($sequences) - 1))];
+        $password .= takeRandom($randomSequence);
+    }
+    $password = str_shuffle($password);
+    return $password;
 }
 
 $generated = "";
@@ -45,7 +58,7 @@ $smalls = $_POST["Smalls"] ?? 0;
 $numbers = $_POST["Numbers"] ?? 0;
 $symbols = $_POST["Symbols"] ?? 0;
 
-//generatePassword();
+//generatePassword($size, $capitals, $smalls, $numbers, $symbols);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $generated = generatePassword($size, $capitals, $smalls, $numbers, $symbols);
 } else {
@@ -55,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numbers = 1;
     $symbols = 1;
 }
-$resultSelect = generateSelectOptions();
+$resultSelect = generateSelectOptions($size);
 $isCapitalsChecked = $capitals == 1 ? "checked" : "";
 $isSmallsChecked = $smalls == 1 ? "checked" : "";
 $isNumbersChecked = $numbers == 1 ? "checked" : "";
@@ -72,7 +85,7 @@ $page=<<<PAGE
   <body>
     <h1>Password generator</h1>
     <h2>Password</h2>
-    <div class="passwordCont"></div>
+    <div class="passwordCont">$generated</div>
     <form method="POST" action="/index.php">
         <input type="checkbox" name="Capitals" id="Capitals" value="1" $isCapitalsChecked>
         <label for="Capitals">Capitals</label><br>
