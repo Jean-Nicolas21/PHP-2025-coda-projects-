@@ -1,0 +1,283 @@
+:root {
+    /* Couleurs de la Direction Artistique */
+    --lowify-pink-light: #f8c4d6;
+    --lowify-pink-hover: #ffe6f0;
+    --lowify-pink-darker: #f095b4;
+    --lowify-black-deep: #121212; /* Un noir plus profond que bg-dark */
+}
+
+.list-group-item.song-row {
+    background-color: #212121; /* Fond sombre pour la ligne */
+    border: 1px solid rgba(248, 196, 214, 0.1);
+    border-radius: 0;
+    padding: 15px 20px;
+    margin-bottom: 2px;
+    color: white;
+    /* Lueur subtile au survol */
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.list-group-item.song-row:hover {
+    background-color: #2c2c2c; /* Légèrement plus clair au survol */
+    cursor: pointer;
+    /* Ajoutez une petite lueur néon rose au survol pour la DA */
+    box-shadow: 0 0 5px rgba(248, 196, 214, 0.4);
+}
+
+.list-group-item.song-row > div {
+    /* Ceci cible le div principal qui contient les deux colonnes (info / durée) */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Assurer la visibilité du titre de la chanson */
+.list-group-item.song-row .song-title {
+    color: white !important; /* Force le blanc pour le titre */
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Assurer la visibilité des liens artiste/album (en rose) */
+.list-group-item.song-row .artist-link,
+.list-group-item.song-row .album-link {
+    color: var(--lowify-pink-light) !important; /* Force la couleur rose */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+/* Assurer que la partie droite (durée/note) est toujours à droite */
+.list-group-item.song-row > div > div:last-child {
+    flex-shrink: 0; /* Empêche cette colonne de se contracter */
+    text-align: right;
+    min-width: 100px; /* Donne un peu d'espace */
+}
+
+/*.artist-link, .album-link {
+    color: #f8c4d6 !important;
+}*/
+
+/* 2. Effet Hover sur le Lien Artiste (album.php) */
+.artist-link:hover {
+    color: var(--lowify-pink-hover) !important;
+    text-decoration: underline !important;
+}
+
+/* 3. Style du Lien Homepage (Rend-le cliclable) */
+.homepage-link {
+    transition: background-color 0.2s, color 0.2s;
+    padding: 0 10px; /* Espace autour du texte pour le hover */
+    border-radius: 4px;
+}
+
+/* 4. Effet Hover du Homepage (Bouton lumineux) */
+.homepage-link:hover {
+    background-color: rgba(248, 196, 214, 0.15) !important;
+    color: var(--lowify-pink-hover) !important;
+}
+
+/* Animation des couleurs pour l'effet dynamique */
+@keyframes glowing-border {
+    0%   { box-shadow: 0 1px 10px rgba(248, 196, 214, 0.5); }
+    50%  { box-shadow: 0 1px 15px rgba(255, 170, 200, 0.7); } /* Rose plus clair au milieu */
+    100% { box-shadow: 0 1px 10px rgba(248, 196, 214, 0.5); }
+}
+
+/* Appliquer l'animation et la bordure rose au header */
+.animated-header {
+    border-bottom: 2px solid var(--lowify-pink-light);
+    animation: glowing-border 4s infinite alternate; /* 4s: durée, infinite: boucle, alternate: aller-retour */
+}
+
+/* Définition de l'animation des étoiles */
+@keyframes sparkle-glow {
+    0%   { opacity: 0; transform: scale(0.5); }
+    50%  { opacity: 1; transform: scale(1.1); } /* Pic de lumière et de taille */
+    100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* Base pour le titre (reste le même) */
+.lowify-title {
+    position: relative;
+    display: inline-block;
+}
+
+/* Pseudo-élément pour l'étoile 1 (Gauche/Haut) */
+.lowify-title::before {
+    content: "✦"; /* Utilisation d'une petite croix/étoile */
+    position: absolute;
+    top: -5px;
+    left: -20px;
+    font-size: 1.2rem;
+    color: var(--lowify-pink-light);
+
+    /* Application de l'animation */
+    animation: sparkle-glow 3s infinite alternate;
+    animation-delay: 0s; /* Commence immédiatement */
+}
+
+/* Pseudo-élément pour l'étoile 2 (Droite/Bas) */
+.lowify-title::after {
+    content: "✦";
+    position: absolute;
+    bottom: -5px;
+    right: -25px;
+    font-size: 0.9rem;
+    color: var(--lowify-pink-hover);
+
+    /* Application de l'animation avec un décalage */
+    animation: sparkle-glow 3s infinite alternate;
+    animation-delay: 1.5s; /* Commence au milieu du cycle de l'autre étoile */
+}
+
+.horizontal-scroll-container {
+    overflow-x: hidden; /* Permet le défilement */
+    overflow-y: visible; /* Laissez l'agrandissement vertical se faire */
+    white-space: normal; /* Force les éléments sur une ligne */
+    padding: 0;/* Espace pour la barre de défilement */
+    /* Cacher la barre de défilement pour WebKit (Chrome, Safari, Edge) */
+    /* Cacher la barre de défilement pour Firefox */
+}
+
+/* Style de base pour chaque carte de chanson/album */
+.carousel-card {
+    /* REMPLACÉ par inline-flex, qui gère l'alignement horizontal et Flexbox */
+    display: flex;
+    flex-direction: column; /* Ajouté pour le contenu interne vertical */
+    justify-content: space-between; /* Ajouté pour pousser les éléments en haut/bas */
+    text-align: center;
+    overflow: hidden;
+    width: 220px; /* Largeur de la carte (étroite) */
+    height: 380px; /* Hauteur de la carte (grande) */
+    margin: 10px;
+    transition: all 0.3s;
+    transform-origin: top;
+    background-color: rgba(248, 196, 214, 0.05);
+    border: 1px solid rgba(248, 196, 214, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    opacity: 1;
+    cursor: pointer;
+    vertical-align: top; /* Important pour l'alignement des éléments "inline" */
+}
+
+.carousel-card h4 {
+    font-size: 1rem; /* Texte légèrement plus petit */
+    white-space: normal; /* Permet au titre de revenir à la ligne si besoin */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limite à 2 lignes */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.carousel-card p.small {
+    font-size: 0.8rem; /* Texte de l'album/artiste plus petit */
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* Limite à 1 ligne */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Styles pour les sections, pour l'alignement */
+.section-title {
+    color: var(--lowify-pink-light); /* Couleur du titre de section */
+    font-size: 2rem; /* Taille plus grande pour les titres de section */
+    margin-left: 15px; /* Aligner avec le début des cartes */
+}
+
+.carousel-card:hover {
+    transform: scale(1.03);
+    background-color: rgba(248, 196, 214, 0.1);
+    border-color: var(--lowify-pink-light); /* Met en évidence la carte survolée */
+    opacity: 1;
+    z-index: 10;
+}
+
+/* ================================================================= */
+/* NOUVEAU : STYLES POUR LE BLOC DE BIENVENUE (NEON EFFECT) */
+/* ================================================================= */
+
+/* Style pour la lueur du titre */
+.welcome-title-glow {
+    /* Utilise le rose pâle pour le texte */
+    color: var(--lowify-pink-light) !important;
+
+    /* Crée l'effet de néon sur le texte */
+    text-shadow:
+            0 0 5px rgba(248, 196, 214, 0.7), /* Lueur interne douce */
+            0 0 10px rgba(248, 196, 214, 0.5), /* Lueur moyenne */
+            0 0 15px rgba(255, 170, 200, 0.3); /* Lueur externe large */
+
+    transition: text-shadow 0.5s ease-in-out;
+}
+
+/* Style pour la lueur du conteneur (Bordure néon) */
+.welcome-block-glow {
+    /* Utilise la couleur d'arrière-plan semi-transparente existante */
+    background-color: rgba(248, 196, 214, 0.05);
+    /* Bordure légèrement plus fine et plus visible */
+    /*border: 1px solid rgba(248, 196, 214, 0.7);*/
+    border: 2px solid var(--lowify-pink-light);
+
+    /* Crée la lueur autour du bloc (Intensifié) */
+    box-shadow:
+            0 0 10px rgba(248, 196, 214, 0.7),  /* Lueur interne proche */
+            0 0 20px rgba(255, 170, 200, 0.5); /* Lueur externe diffuse */
+
+    /* Animation pour donner un léger effet de pulsation */
+    animation: neon-pulse 3s infinite alternate;
+}
+
+@keyframes neon-pulse {
+    /* ÉTAT 0% : Faible lumière */
+    0% {
+        box-shadow:
+                0 0 5px rgba(248, 196, 214, 0.5),
+                0 0 15px rgba(255, 170, 200, 0.3);
+    }
+    /* ÉTAT 100% : Forte lumière */
+    100% {
+        box-shadow:
+                0 0 15px rgba(248, 196, 214, 1), /* La source lumineuse (bordure) est plus brillante */
+                0 0 30px rgba(255, 170, 200, 0.7); /* La lueur externe est plus intense */
+    }
+}
+
+/* ================================================================= */
+/* STYLES POUR LA BARRE DE RECHERCHE (NEON/SYNTH) */
+/* ================================================================= */
+
+.search-input {
+    /* Fond sombre transparent */
+    background-color: rgba(26, 26, 26, 0.8);
+    color: white;
+    border: 2px solid var(--lowify-pink-light); /* Bordure rose */
+    border-right: none; /* Supprime la bordure de droite pour fusionner avec le bouton */
+    border-radius: 5px 0 0 5px; /* Coins arrondis à gauche seulement */
+    transition: all 0.3s ease-in-out;
+}
+
+.search-input:focus {
+    background-color: #1a1a1a;
+    color: white;
+    /* Lueur Néon au focus */
+    box-shadow: 0 0 10px rgba(248, 196, 214, 0.7);
+    border-color: #f8c4d6;
+    outline: none; /* Supprime l'outline Bootstrap par défaut */
+}
+
+.search-button {
+    background-color: var(--lowify-pink-light); /* Bouton rose */
+    color: #1a1a1a; /* Texte/icône sombre */
+    border: 2px solid var(--lowify-pink-light);
+    border-left: none; /* Supprime la bordure de gauche pour fusionner avec l'input */
+    border-radius: 0 5px 5px 0; /* Coins arrondis à droite seulement */
+    transition: all 0.3s;
+}
+
+.search-button:hover {
+    background-color: #ff99bb; /* Rose légèrement plus clair au survol */
+    box-shadow: 0 0 5px rgba(248, 196, 214, 0.8);
+    transform: scale(1.05);
+}
