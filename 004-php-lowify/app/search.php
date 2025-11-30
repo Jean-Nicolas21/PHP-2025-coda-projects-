@@ -1,14 +1,27 @@
 <?php
+
+/**
+ * search.php
+ * * Page de recherche principale de l'application Lowify.
+ * Cette page gère la connexion à la base de données, l'exécution des requêtes
+ * de recherche pour les artistes, albums et chansons, et l'affichage des
+ * résultats avec une logique de priorité.
+ */
+
+// --- Inclusions des dépendances ---
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
+// --- Configuration de la base de données ---
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
 $password = 'lowifypassword';
-//Initialisation
+
 $db = null;
+
+// --- Tentative de connexion à la base de données ---
 try {
     $db = new DatabaseManager(
         dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -18,9 +31,12 @@ try {
 } catch (PDOException $e) {
     die ("Connection failed: " . $e->getMessage());
 }
+
 $error = "error.php?errorMessage=It seems that what you're searching doesn't exist...";
 
 $query = $_GET['query'] ?? '';
+
+// --- RECHERCHE D'ARTISTE ---
 
 $artistSearch = [];
 try {
@@ -40,13 +56,14 @@ try {
 if (!empty($artistSearch)) {
     $filteredArtist = [];
     foreach ($artistSearch as $artist) {
-        if ($artist['name'] === $query) { // === pour une comparaison stricte (avec la casse)
+        if ($artist['name'] === $query) {
             $filteredArtist[] = $artist;
         }
     }
-    // Si la recherche a trouvé des choses mais AUCUNE n'est une correspondance exacte, on vide le tableau.
     $artistSearch = $filteredArtist;
 }
+
+// --- RECHERCHE D'ALBUM ---
 
 $albumSearch = [];
 try {
@@ -81,6 +98,8 @@ if (!empty($albumSearch)) {
 }
 
 
+// --- RECHERCHE DE CHANSON ---
+
 $songSearch = [];
 try {
     $songSearch = $db->executeQuery(<<<SQL
@@ -105,6 +124,7 @@ try {
     header("Location: $error");
     die("Connection failed: " . $e->getMessage());
 }
+
 if (!empty($songSearch)) {
     $filteredSongs = [];
     foreach ($songSearch as $song) {
@@ -112,25 +132,26 @@ if (!empty($songSearch)) {
             $filteredSongs[] = $song;
         }
     }
-    // Si la recherche trouve 82 chansons, mais qu'AUCUNE n'est la chanson exacte, on vide le tableau.
     $songSearch = $filteredSongs;
 }
 
-$foundResult = false; // Initialisation (ou réinitialisation)
+// --- LOGIQUE DE PRIORITÉ ET D'EXCLUSIVITÉ ---
 
-// 1. Priorité Album : Si un album est trouvé, on l'affiche exclusivement.
+$foundResult = false;
+
+
 if (!empty($songSearch)) {
     $foundResult = true;
-    $artistSearch = []; // Vide les autres tableaux pour l'exclusivité
+    $artistSearch = [];
     $albumSearch = [];
 }
-// 2. PRIORITÉ INTERMÉDIAIRE : ALBUM (si aucune chanson n'a été trouvée)
+
 else if (!empty($albumSearch)) {
     $foundResult = true;
-    $artistSearch = []; // Vide le tableau d'artiste pour l'exclusivité
-    $songSearch = []; // Déjà vide
+    $artistSearch = [];
+    $songSearch = [];
 }
-// 3. DERNIÈRE PRIORITÉ : ARTISTE (si ni chanson ni album)
+
 else if (!empty($artistSearch)) {
     $foundResult = true;
 }
@@ -142,13 +163,16 @@ if (!$foundResult) {
 }
 
 
+// --- GÉNÉRATION DU HTML DES CARTES D'ARTISTE ---
+
+/** @var string $artistSearchHtml Contenu HTML généré pour l'affichage des cartes d'artiste. */
 $artistSearchHtml = '';
 foreach ($artistSearch as $artist) {
+    // Extraction des données
     $coverArt = $artist['cover'];
     $nameArt = $artist['name'];
     $idArt = $artist['id'];
 
-    // Utilisation de la carte artiste (même structure que index.php et artists.php)
     $artistSearchHtml .= <<<HTML
 <div class="carousel-card text-center" style="width: 220px; height: 280px;">
     <a href="artist.php?id=$idArt" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center justify-content-center">
@@ -160,6 +184,9 @@ foreach ($artistSearch as $artist) {
 HTML;
 }
 
+// --- GÉNÉRATION DU HTML DES CARTES D'ALBUM ---
+
+/** @var string $albumSearchHtml Contenu HTML généré pour l'affichage des cartes d'album. */
 $albumSearchHtml = '';
 foreach ($albumSearch as $album) {
     $coverAlbum = $album['albumCover'];
@@ -170,7 +197,6 @@ foreach ($albumSearch as $album) {
     $nameArtist = $album['artistName'];
     $idArtist = $album['artistId'];
 
-    // Utilisation de la carte album (Image carrée)
     $albumSearchHtml .= <<<HTML
 <div class="carousel-card text-center" style="width: 220px; height: 380px;">
     <a href="album.php?id=$idAlbum" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center mb-2">
@@ -188,9 +214,10 @@ foreach ($albumSearch as $album) {
 HTML;
 }
 
+// --- GÉNÉRATION DU HTML DES CARTES DE CHANSON ---
+
 $songSearchHtml = '<div class="d-flex flex-wrap justify-content-start">';
 foreach ($songSearch as $song) {
-    // Les variables sont maintenant disponibles grâce à la requête modifiée
     $coverAlbum = $song['albumCover'];
     $nameAlbum = $song['albumName'];
     $idAlbum = $song['albumId'];
@@ -200,7 +227,6 @@ foreach ($songSearch as $song) {
     $formatedDuration = displayDuration($song['songDuration']);
     $noteSong = $song['songNote'];
 
-    // Structure de carte pour l'affichage exclusif de la recherche
     $songSearchHtml .= <<<HTML
 <div class="carousel-card text-center" style="width: 200px; height: 320px;">
     <a href="album.php?id=$idAlbum" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center mb-2">
@@ -224,10 +250,7 @@ HTML;
 }
 $songSearchHtml .= '</div>';
 
-/*if (empty($artistSearch) && empty($albumSearch) && empty($songSearch)) {
-    header("Location: $error");
-    exit;
-}*/
+// --- COMPTAGE DES RÉSULTATS ET GESTION DES BLOCS D'AFFICHAGE ---
 
 $artistCount = count($artistSearch);
 $albumCount = count($albumSearch);
@@ -257,6 +280,8 @@ if ($songCount > 0) {
     HTML;
 }
 
+// --- GÉNÉRATION DE L'EN-TÊTE COMMUN ---
+
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
     <div class="container-fluid d-flex justify-content-between align-items-center">
@@ -283,6 +308,8 @@ $commonHeaderHtml = <<<HEADER
     </div>
 </header>
 HEADER;
+
+// --- STRUCTURE HTML FINALE DE LA PAGE ---
 
 $html =<<<HTML
 $commonHeaderHtml

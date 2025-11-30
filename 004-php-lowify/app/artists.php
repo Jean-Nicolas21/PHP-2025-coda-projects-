@@ -1,23 +1,37 @@
 <?php
+
+/**
+ * artists.php
+ * * Page listant tous les artistes disponibles dans l'application Lowify.
+ * Cette page récupère la liste complète des artistes (ID, nom, pochette)
+ * et les affiche sous forme de cartes cliquables menant à la page de détail de l'artiste.
+ */
+
+// --- Inclusions des dépendances ---
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
+// --- Configuration de la base de données ---
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
 $password = 'lowifypassword';
 
 $db = null;
+
+// --- Tentative de connexion à la base de données ---
 try {
     $db = new DatabaseManager(
-            dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-            username: $username,
-            password: $password
+        dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        username: $username,
+        password: $password
     );
 } catch (PDOException $e) {
     die ("Connection failed: " . $e->getMessage());
 }
+
+// --- RÉCUPÉRATION DE TOUS LES ARTISTES ---
 
 $allArtist = [];
 try {
@@ -29,13 +43,15 @@ try {
     die ("Error during query: " . $e->getMessage());
 }
 
-$artistsListHtml = '<div class="d-flex flex-wrap justify-content-start">'; // Utilisation de Flexbox/Wrap
+// --- GÉNÉRATION DU HTML DE LA LISTE DES ARTISTES ---
+
+$artistsListHtml = '<div class="d-flex flex-wrap justify-content-start">';
+
 foreach ($allArtist as $artist) {
+    // Extraction des données de l'artiste
     $nameArt = $artist['name'];
     $coverArt = $artist['cover'];
     $idArt = $artist['id'];
-
-    // Réutilisation de la structure de carte artiste (comme sur index.php)
     $artistsListHtml .= <<<HTML
 <div class="carousel-card text-center" style="width: 220px; height: 320px;">
     <a href="artist.php?id=$idArt" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center justify-content-center">
@@ -47,6 +63,8 @@ foreach ($allArtist as $artist) {
 HTML;
 }
 $artistsListHtml .= '</div>';
+
+// --- GÉNÉRATION DE L'EN-TÊTE COMMUN ---
 
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
@@ -75,6 +93,8 @@ $commonHeaderHtml = <<<HEADER
 </header>
 HEADER;
 
+// --- STRUCTURE HTML FINALE DE LA PAGE ---
+
 $html = <<<HTML
 $commonHeaderHtml
 
@@ -84,6 +104,8 @@ $commonHeaderHtml
     <div>$artistsListHtml</div>
 </div>
 HTML;
+
+// --- Rendu de la Page ---
 
 echo (new HTMLPage(title: "Lowify - Artists"))
     ->setupBootstrap([

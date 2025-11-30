@@ -1,14 +1,26 @@
 <?php
+
+/**
+ * album.php
+ * * Page de détail pour un album spécifique dans l'application Lowify.
+ * Affiche les informations de l'album, de l'artiste associé, et la liste
+ * détaillée des pistes (chansons) incluses dans cet album.
+ */
+
+// --- Inclusions des dépendances ---
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
+// --- Configuration de la base de données ---
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
 $password = 'lowifypassword';
-//Initialisation
+
 $db = null;
+
+// --- Tentative de connexion à la base de données ---
 try {
     $db = new DatabaseManager(
         dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -20,7 +32,10 @@ try {
 }
 
 $error = "error.php?errorMessage=Unknown Album...";
-$idAlbum = $_GET['id'];
+
+$idAlbum = $_GET['id'] ?? null;
+
+// --- RÉCUPÉRATION DES DONNÉES DE L'ALBUM ET DE SES CHANSONS ---
 
 $allAlbum = [];
 try {
@@ -48,23 +63,26 @@ try {
     SQL,["albumId" => $idAlbum]);
     if (sizeof($allAlbum) == 0) {
         header("Location: $error");
+        exit;
     }
 } catch (PDOException $e) {
     header("Location: $error");
     die("Connection failed: " . $e->getMessage());
 }
 
+// --- PRÉPARATION DES DONNÉES DE L'ALBUM/ARTISTE (HEADER) ---
+
 $infoAlbumArt = "";
 $header = $allAlbum[0];
-    $nameAlbum = $header['albumName'];//ok
-    $nameArtist = $header['artistName'];//ok
-    $bioArtist = $header['artistBio'];//ok
-    $idArtist = $header['artistIdReal'];//ok
-    $listenersArtist = $header['artistListeners'];
-    $formatedListeners = displayListeners($listenersArtist);//ok
-    $coverAlbum = $header['albumCover'];
-    $dateAlbum = $header['albumDate'];
-    $formatedDateAlbum = displayDate($dateAlbum);
+$nameAlbum = $header['albumName'];
+$nameArtist = $header['artistName'];
+$bioArtist = $header['artistBio'];
+$idArtist = $header['artistIdReal'];
+$listenersArtist = $header['artistListeners'];
+$formatedListeners = displayListeners($listenersArtist);
+$coverAlbum = $header['albumCover'];
+$dateAlbum = $header['albumDate'];
+$formatedDateAlbum = displayDate($dateAlbum);
 
 $infoAlbumArt .= <<<HTML
 <div class="row align-items-center mb-5 p-3 bg-dark shadow-lg rounded-3 border border-secondary">
@@ -94,25 +112,29 @@ $infoAlbumArt .= <<<HTML
 </div>
 HTML;
 
+// --- GÉNÉRATION DE LA LISTE DES PISTES (CHANSONS) ---
+
 $songAlbum = "";
-$index = 0;
 $songAlbum .= '<ul class="list-group list-group-flush bg-transparent mt-4">';
 foreach ($allAlbum as $index => $album) {
     $trackNumber = $index + 1;
     $nameSong = $album['songName'];
     $durationSong = $album['songDuration'];
-    $formatedDuration = displayDuration($durationSong);
+    $formatedDuration = displayDuration($durationSong); //
     $noteSong = $album['songNotes'];
     $formatedNote = number_format($noteSong, 2, '.', '');
+
     $songAlbum .= <<<HTML
 <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-white border-bottom border-secondary border-opacity-50 song-row"> 
     
-    <div class="col-7 text-truncate"> 
+    <div class="d-flex align-items-center col-7 text-truncate"> 
+        
         <span class="fw-light me-3 text-white-50">#$trackNumber</span> 
-        <span class="fw-normal">$nameSong</span>
+        
+        <span class="fw-normal text-truncate flex-grow-1">$nameSong</span>
     </div>
 
-    <div class="col-5 d-flex justify-content-end align-items-center"> 
+    <div class="col-5 d-flex justify-content-end align-items-center">
         
         <span class="text-white-50 text-end me-4" style="width: 50px;">$formatedDuration</span>
         
@@ -125,6 +147,8 @@ HTML;
 }
 
 $songAlbum .= '</ul>';
+
+// --- GÉNÉRATION DE L'EN-TÊTE COMMUN ---
 
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
@@ -153,6 +177,8 @@ $commonHeaderHtml = <<<HEADER
 </header>
 HEADER;
 
+// --- STRUCTURE HTML FINALE DE LA PAGE ---
+
 $html = <<<HTML
 $commonHeaderHtml
 
@@ -166,12 +192,13 @@ $commonHeaderHtml
 
 HTML;
 
+// --- Rendu de la Page ---
+
 echo (new HTMLPage(title: "Lowify - $nameAlbum"))
     ->setupBootstrap([
         "class" => "bg-dark text-white p-4",
         "data-bs-theme " => "dark"
     ])
     ->addContent($html)
-    //->addRawStyle($artistsCSS)
     ->addStylesheet('/inc/style.css')
     ->render();

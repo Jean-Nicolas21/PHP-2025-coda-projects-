@@ -1,11 +1,21 @@
 <?php
+
+/**
+ * error.php
+ * * Page d'affichage des erreurs de l'application Lowify.
+ * Cette page est génériquement utilisée pour afficher des messages d'erreur
+ * transmis via l'URL (paramètre 'errorMessage') et propose un retour à l'accueil.
+ */
+
+// --- Inclusion des dépendances ---
 require_once 'inc/page.inc.php';
 
-// Récupère le message d'erreur de l'URL, ou utilise un message par défaut
+// --- Gestion du message d'erreur ---
+
 $errorMessage = $_GET['errorMessage'] ?? "Oops...error, the page could not be found.";
 
-// --- HEADER COMMUN (avec la barre de recherche intégrée) ---
-// Note: Cette variable doit être définie ou incluse. Je la définis ici pour l'exhaustivité.
+// --- Définition du Bloc HTML de l'En-tête Commun ---
+
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
     <div class="container-fluid d-flex justify-content-between align-items-center">
@@ -34,7 +44,8 @@ $commonHeaderHtml = <<<HEADER
 HEADER;
 
 
-// --- BLOC D'ERREUR STYLISÉ (avec la classe spécifique 'error-block-alert') ---
+// --- Définition du Bloc HTML de l'Erreur ---
+
 $errorBlockHtml = <<<HTML
 <div class="text-center my-5 p-5 rounded-3 shadow-lg error-block-alert">
     <h1 class="fw-lighter mb-4 welcome-title-glow" style="font-size: 4rem; letter-spacing: 0.1em; color: #ff5555;">
@@ -50,6 +61,8 @@ $errorBlockHtml = <<<HTML
 </div>
 HTML;
 
+// --- Assemblage du HTML Final ---
+
 $html =<<<HTML
 $commonHeaderHtml
 <div class="container py-4 d-flex justify-content-center"> 
@@ -57,11 +70,13 @@ $commonHeaderHtml
 </div>
 HTML;
 
+// --- Rendu de la Page ---
+
 echo (new HTMLPage(title: "Lowify - Error"))
     ->setupBootstrap([
         "class" => "bg-dark text-white p-4",
         "data-bs-theme " => "dark"
     ])
     ->addContent($html)
-    ->addStylesheet('/inc/style.css') // Assurez-vous que c'est le bon chemin
+    ->addStylesheet('/inc/style.css')
     ->render();

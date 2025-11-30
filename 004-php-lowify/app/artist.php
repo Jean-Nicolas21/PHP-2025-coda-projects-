@@ -1,14 +1,26 @@
 <?php
+
+/**
+ * artist.php
+ * * Page de détail pour un artiste spécifique dans l'application Lowify.
+ * Affiche la biographie, le nombre d'auditeurs mensuels, ses 5 chansons les mieux
+ * notées, et la liste complète de ses albums.
+ */
+
+// --- Inclusions des dépendances ---
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
+// --- Configuration de la base de données ---
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
 $password = 'lowifypassword';
-//Initialisation
+
 $db = null;
+
+// --- Tentative de connexion à la base de données ---
 try {
     $db = new DatabaseManager(
         dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -18,8 +30,14 @@ try {
 } catch (PDOException $e) {
     die ("Connection failed: " . $e->getMessage());
 }
+
+
 $error = "error.php?errorMessage=Unknown Artist...";
-$idArtist = $_GET['id'];
+
+$idArtist = $_GET['id'] ?? null;
+
+// --- 1. RÉCUPÉRATION DES INFORMATIONS PRINCIPALES DE L'ARTISTE ---
+
 $allArtist = [];
 try {
     $allArtist = $db->executeQuery(<<<SQL
@@ -29,11 +47,14 @@ try {
     SQL,["artistId" => $idArtist]);
     if (sizeof($allArtist) == 0) {
         header("Location: $error");
+        exit;
     }
 } catch (PDOException $e) {
     header("Location: $error");
     die("Connection failed: " . $e->getMessage());
 }
+
+// --- 2. RÉCUPÉRATION DES 5 CHANSONS LES MIEUX NOTÉES ---
 
 $songArtist = [];
 try {
@@ -55,6 +76,8 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
+// --- 3. RÉCUPÉRATION DE TOUS LES ALBUMS DE L'ARTISTE ---
+
 $allAlbum = [];
 try {
     $allAlbum = $db->executeQuery(<<<SQL
@@ -67,14 +90,15 @@ SQL, ["artistId" => $idArtist]);
     die("Connection failed: " . $e->getMessage());
 }
 
+// --- GÉNÉRATION DU BLOC D'INFORMATION PRINCIPAL DE L'ARTISTE ---
+
 $soloArtHtml = "";
 $artist = $allArtist[0];
-    $nameArtist = $artist['name'];
-    $coverArtist = $artist['cover'];
-    $biographyArtist = $artist['biography'];
-    $monthlyListenersArtist = $artist['monthly_listeners'];
+$nameArtist = $artist['name'];
+$coverArtist = $artist['cover'];
+$biographyArtist = $artist['biography'];
+$monthlyListenersArtist = $artist['monthly_listeners'];
 $formatedListeners = displayListeners($monthlyListenersArtist);
-
 
 $soloArtHtml .= <<<HTML
 <div class="row align-items-center mb-5 p-3 bg-dark shadow-lg rounded-3 border border-secondary" style="border-color: #f8c4d6 !important;">
@@ -95,6 +119,8 @@ $soloArtHtml .= <<<HTML
 </div>
 HTML;
 
+// --- GÉNÉRATION DU BLOC HTML DES MEILLEURES CHANSONS (TOP 5) ---
+
 $topSongHtml = '<div class="d-flex flex-wrap">';
 foreach ($songArtist as $song) {
     $nameSong = $song['songName'];
@@ -105,6 +131,7 @@ foreach ($songArtist as $song) {
     $coverAlbum = $song['albumCover'];
     $nameAlbum = $song['albumName'];
     $idAlbum = $song['albumId'];
+
     $topSongHtml .= <<<HTML
 <div class="carousel-card">
     
@@ -126,6 +153,8 @@ HTML;
 }
 $topSongHtml .= '</div>';
 
+// --- GÉNÉRATION DU BLOC HTML DES ALBUMS ---
+
 $allAlbumHtml = '<div class="d-flex flex-wrap">';
 foreach ($allAlbum as $album) {
     $nameAlbum = $album['name'];
@@ -133,6 +162,7 @@ foreach ($allAlbum as $album) {
     $dateAlbum = $album['release_date'];
     $formatedDateAlbum = displayDate($dateAlbum);
     $idAlbum = $album['id'];
+
     $allAlbumHtml .= <<<HTML
 <div class="carousel-card">
     
@@ -147,6 +177,8 @@ foreach ($allAlbum as $album) {
 HTML;
 }
 $allAlbumHtml .= '</div>';
+
+// --- GÉNÉRATION DE L'EN-TÊTE COMMUN ---
 
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
@@ -176,6 +208,8 @@ $commonHeaderHtml = <<<HEADER
 HEADER;
 
 
+// --- STRUCTURE HTML FINALE DE LA PAGE ---
+
 $html =<<<HTML
 $commonHeaderHtml
 
@@ -189,6 +223,8 @@ $commonHeaderHtml
     <div>$allAlbumHtml</div>
 </div>
 HTML;
+
+// --- Rendu de la Page ---
 
 echo (new HTMLPage(title: "Lowify - $nameArtist"))
     ->setupBootstrap([

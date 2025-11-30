@@ -1,14 +1,26 @@
 <?php
+
+/**
+ * index.php
+ * * Page d'accueil de l'application Lowify.
+ * Cette page affiche les sections principales : artistes populaires, albums récents
+ * et albums populaires (les mieux notés), et sert de point de départ à la navigation.
+ */
+
+// --- Inclusions des dépendances ---
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
+// --- Configuration de la base de données ---
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
 $password = 'lowifypassword';
-//Initialisation
+
 $db = null;
+
+// --- Tentative de connexion à la base de données ---
 try {
     $db = new DatabaseManager(
         dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -20,6 +32,10 @@ try {
 }
 
 $error = "error.php?errorMessage=Oops didn't catch the page...";
+
+// -----------------------------------------------------------------------------
+// --- 1. RÉCUPÉRATION DES ARTISTES POPULAIRES (Top 5 par auditeurs mensuels) ---
+// -----------------------------------------------------------------------------
 
 $popularArtist = [];
 try {
@@ -34,14 +50,15 @@ SQL);
     die("Connection failed: " . $e->getMessage());
 }
 
-$popularArtistHtml = '<div class="d-flex flex-wrap">'; // Conteneur pour l'alignement horizontal
+// --- GÉNÉRATION DU HTML DES ARTISTES POPULAIRES ---
+
+$popularArtistHtml = '<div class="d-flex flex-wrap">';
 foreach ($popularArtist as $artist) {
     $nameArtist = $artist['name'];
     $coverArtist = $artist['cover'];
     $monthlyListeners = $artist['monthly_listeners'];
     $formatedListeners = displayListeners($monthlyListeners);
     $idArtist = $artist['id'];
-
     $popularArtistHtml .= <<<HTML
 <div class="carousel-card text-center">
     <a href="artist.php?id=$idArtist" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center">
@@ -57,6 +74,10 @@ foreach ($popularArtist as $artist) {
 HTML;
 }
 $popularArtistHtml .= '</div>';
+
+// -----------------------------------------------------------------------------
+// --- 2. RÉCUPÉRATION DES ALBUMS RÉCENTS (Top 5 par date de sortie) ---
+// -----------------------------------------------------------------------------
 
 $recentAlbum = [];
 try {
@@ -78,6 +99,8 @@ SQL);
     die("Connection failed: " . $e->getMessage());
 }
 
+// --- GÉNÉRATION DU HTML DES ALBUMS RÉCENTS ---
+
 $recentAlbumHtml = '<div class="d-flex flex-wrap">';
 foreach ($recentAlbum as $album) {
     $nameAlbum = $album['albumName'];
@@ -87,7 +110,6 @@ foreach ($recentAlbum as $album) {
     $albumId = $album['albumId'];
     $artistName = $album['artistName'];
     $artistId = $album['artistId'];
-
     $recentAlbumHtml .= <<<HTML
 <div class="carousel-card text-center" style="width: 220px; height: 380px;">
     <a href="album.php?id=$albumId" class="text-decoration-none text-white text-center flex-grow-1 d-flex flex-column align-items-center mb-2">
@@ -106,6 +128,10 @@ HTML;
 }
 $recentAlbumHtml .= '</div>';
 
+
+// -----------------------------------------------------------------------------
+// --- 3. RÉCUPÉRATION DES ALBUMS POPULAIRES (Top 5 par note moyenne) ---
+// -----------------------------------------------------------------------------
 
 $popularAlbum = [];
 try {
@@ -129,6 +155,8 @@ SQL);
     header("Location: $error");
     die("Connection failed: " . $e->getMessage());
 }
+
+// --- GÉNÉRATION DU HTML DES ALBUMS POPULAIRES ---
 
 $popularAlbumHtml = '<div class="d-flex flex-wrap">';
 foreach ($popularAlbum as $album) {
@@ -164,6 +192,8 @@ foreach ($popularAlbum as $album) {
 HTML;
 }
 $popularAlbumHtml .= '</div>';
+
+// --- GÉNÉRATION DES BLOCS HTML STATIQUES (Header, Bienvenue, Banner) ---
 
 $commonHeaderHtml = <<<HEADER
 <header class="bg-dark text-white mb-4 sticky-top p-3 animated-header">
@@ -213,6 +243,8 @@ $artistBannerHtml = <<<HTML
 </a>
 HTML;
 
+// --- STRUCTURE HTML FINALE DE LA PAGE ---
+
 $html =<<<HTML
 $commonHeaderHtml
 
@@ -232,12 +264,13 @@ $commonHeaderHtml
 </div>
 HTML;
 
+// --- Rendu de la Page ---
+
 echo (new HTMLPage(title: "Lowify - Welcome"))
     ->setupBootstrap([
         "class" => "bg-dark text-white p-4",
         "data-bs-theme " => "dark"
     ])
     ->addContent($html)
-    //->addRawStyle($artistsCSS)
     ->addStylesheet('/inc/style.css')
     ->render();
