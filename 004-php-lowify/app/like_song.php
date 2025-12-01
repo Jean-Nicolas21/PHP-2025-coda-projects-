@@ -1,11 +1,13 @@
 <?php
 
 // --- Inclusions des dépendances ---
+
 require_once 'inc/page.inc.php';
 require_once 'inc/database.inc.php';
 require_once 'inc/utils.inc.php';
 
 // --- Configuration de la base de données ---
+
 $host = 'mysql';
 $dbname = 'lowify';
 $username = 'lowify';
@@ -14,6 +16,7 @@ $password = 'lowifypassword';
 $db = null;
 
 // --- Tentative de connexion à la base de données ---
+
 try {
     $db = new DatabaseManager(
         dsn: "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -25,6 +28,9 @@ try {
 }
 
 $error = "error.php?errorMessage= Oops error...";
+
+
+// --- Recupération du liked song ---
 
 $likedSong = $_GET['id'] ?? null;
 $currentLiked = null;
@@ -45,9 +51,11 @@ try {
     header("Location: $error");
     die("Connection failed: " . $e->getMessage());
 }
-
+// --- Inversion du champ is_liked ---
 $newLiked = 1 - $currentLiked;
 
+
+// --- Mise à jour de le DB avec la nouvelle valeur pour le champ is_liked ---
 try {
     $db->executeQuery(<<<SQL
 UPDATE song
